@@ -10,6 +10,10 @@
 
 ## Version History
 
+### v2.2.1
+
+- :rocket: Update Schema Response
+
 ### v2.2.0
 
 - :rocket: Update Schema Response
