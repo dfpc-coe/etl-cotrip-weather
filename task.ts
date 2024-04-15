@@ -1,47 +1,22 @@
 import fs from 'fs';
-import ETL from '@tak-ps/etl';
-
-try {
-    const dotfile = new URL('.env', import.meta.url);
-
-    fs.accessSync(dotfile);
-
-    Object.assign(process.env, JSON.parse(fs.readFileSync(dotfile)));
-    console.log('ok - .env file loaded');
-} catch (err) {
-    console.log('ok - no .env file loaded');
-}
+import ETL, { Event, SchemaType, handler as internal, local, env } from '@tak-ps/etl';
+import { FeatureCollection, Feature } from 'geojson';
+import { Type, TSchema } from '@sinclair/typebox';
 
 export default class Task extends ETL {
-    static async schema(type = 'input') {
-        if (type === 'input') {
-            return {
-                type: 'object',
-                required: ['COTRIP_TOKEN'],
-                properties: {
-                    'COTRIP_TOKEN': {
-                        type: 'string',
-                        description: 'API Token for CoTrip'
-                    },
-                    'DEBUG': {
-                        type: 'boolean',
-                        default: false,
-                        description: 'Print GeoJSON Features in logs'
-                    }
-                }
-            };
+    async schema(type: SchemaType = SchemaType.Input): Promise<TSchema> {
+        if (type === SchemaType.Input) {
+            return Type.Object({
+                'COTRIP_TOKEN': Type.String({ description: 'API Token for CoTrip' }),
+                'DEBUG': Type.Boolean({ description: 'Print GeoJSON results in logs', default: false })
+            });
         } else {
-            return {
-                type: 'object',
-                required: [],
-                properties: {
-                }
-            };
+            return Type.Object({});
         }
     }
 
     async control() {
-        const layer = await this.layer();
+        const layer = await this.fetchLayer();
 
         const api = 'https://data.cotrip.org/';
         if (!layer.environment.COTRIP_TOKEN) throw new Error('No COTrip API Token Provided');
@@ -53,7 +28,7 @@ export default class Task extends ETL {
         do {
             console.log(`ok - fetching ${++batch} of weather stations`);
             const url = new URL('/api/v1/weatherStations', api);
-            url.searchParams.append('apiKey', token);
+            url.searchParams.append('apiKey', String(token));
             if (res) url.searchParams.append('offset', res.headers.get('next-offset'));
 
             res = await fetch(url);
@@ -88,7 +63,7 @@ export default class Task extends ETL {
             }
         }
 
-        const fc = {
+        const fc: FeatureCollection = {
             type: 'FeatureCollection',
             features: features
         };
@@ -97,15 +72,8 @@ export default class Task extends ETL {
     }
 }
 
-export async function handler(event = {}) {
-    if (event.type === 'schema:input') {
-        return await Task.schema('input');
-    } else if (event.type === 'schema:output') {
-        return await Task.schema('output');
-    } else {
-        const task = new Task();
-        await task.control();
-    }
+env(import.meta.url)
+await local(new Task(), import.meta.url);
+export async function handler(event: Event = {}) {
+    return await internal(new Task(), event);
 }
-
-if (import.meta.url === `file://${process.argv[1]}`) handler();

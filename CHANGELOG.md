@@ -10,6 +10,10 @@
 
 ## Version History
 
+### v2.1.0
+
+- :rocket: Update to latest ETL Strategy
+
 ### v2.0.0
 
 - :rocket: Update to latest token strategy
