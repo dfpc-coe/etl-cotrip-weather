@@ -11,7 +11,17 @@ export default class Task extends ETL {
                 'DEBUG': Type.Boolean({ description: 'Print GeoJSON results in logs', default: false })
             });
         } else {
-            return Type.Object({});
+            return Type.Object({
+                publicName: Type.String(),
+                direction: Type.String(),
+                nativeId: Type.String(),
+                communicationStatus: Type.String(),
+                marker: Type.String(),
+                routeName: Type.String(),
+                id: Type.String(),
+                lastUpdated: Type.String({ format: 'date-time' }),
+                name: Type.String(),
+            });
         }
     }
 
@@ -40,9 +50,12 @@ export default class Task extends ETL {
         const features = [];
         for (const feature of stations.map((station) => {
             station.id = station.properties.id;
-            station.properties.callsign = station.properties.type;
-            delete station.properties.type;
-            delete station.properties.status;
+
+            station.properties = {
+                metadata: station.properties
+            };
+
+            station.properties.callsign = station.properties.metadata.type;
             station.properties.type = 'a-f-G';
             return station;
         })) {

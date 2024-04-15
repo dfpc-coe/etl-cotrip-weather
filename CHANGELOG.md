@@ -10,6 +10,10 @@
 
 ## Version History
 
+### v2.2.0
+
+- :rocket: Update Schema Response
+
 ### v2.1.0
 
 - :rocket: Update to latest ETL Strategy
