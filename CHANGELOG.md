@@ -10,6 +10,10 @@
 
 ## Version History
 
+### v2.4.0
+
+- :tada: Add Capabilities API
+
 ### v2.3.0
 
 - :arrow_up: Update Core Deps

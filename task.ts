@@ -1,27 +1,37 @@
 import fs from 'fs';
-import ETL, { Event, SchemaType, handler as internal, local, env } from '@tak-ps/etl';
-import { FeatureCollection, Feature } from 'geojson';
-import { Type, TSchema } from '@sinclair/typebox';
+import ETL, { Event, SchemaType, handler as internal, local, DataFlowType, InvocationType, InputFeatureCollection } from '@tak-ps/etl';
+import { Static, Type, TSchema } from '@sinclair/typebox';
 
 export default class Task extends ETL {
-    async schema(type: SchemaType = SchemaType.Input): Promise<TSchema> {
-        if (type === SchemaType.Input) {
-            return Type.Object({
-                'COTRIP_TOKEN': Type.String({ description: 'API Token for CoTrip' }),
-                'DEBUG': Type.Boolean({ description: 'Print GeoJSON results in logs', default: false })
-            });
+    static name = 'etl-cotrip-weather';
+    static flow = [ DataFlowType.Incoming ];
+    static invocation = [ InvocationType.Schedule ];
+
+    async schema(
+        type: SchemaType = SchemaType.Input,
+        flow: DataFlowType = DataFlowType.Incoming
+    ): Promise<TSchema> {
+        if (flow === DataFlowType.Incoming) {
+            if (type === SchemaType.Input) {
+                return Type.Object({
+                    'COTRIP_TOKEN': Type.String({ description: 'API Token for CoTrip' }),
+                    'DEBUG': Type.Boolean({ description: 'Print GeoJSON results in logs', default: false })
+                });
+            } else {
+                return Type.Object({
+                    publicName: Type.String(),
+                    direction: Type.String(),
+                    nativeId: Type.String(),
+                    communicationStatus: Type.String(),
+                    marker: Type.String(),
+                    routeName: Type.String(),
+                    id: Type.String(),
+                    lastUpdated: Type.String({ format: 'date-time' }),
+                    name: Type.String(),
+                });
+            }
         } else {
-            return Type.Object({
-                publicName: Type.String(),
-                direction: Type.String(),
-                nativeId: Type.String(),
-                communicationStatus: Type.String(),
-                marker: Type.String(),
-                routeName: Type.String(),
-                id: Type.String(),
-                lastUpdated: Type.String({ format: 'date-time' }),
-                name: Type.String(),
-            });
+            return Type.Object({});
         }
     }
 
@@ -76,7 +86,7 @@ export default class Task extends ETL {
             }
         }
 
-        const fc: FeatureCollection = {
+        const fc: Static<typeof InputFeatureCollection> = {
             type: 'FeatureCollection',
             features: features
         };
@@ -85,8 +95,7 @@ export default class Task extends ETL {
     }
 }
 
-env(import.meta.url)
-await local(new Task(), import.meta.url);
+await local(new Task(import.meta.url), import.meta.url);
 export async function handler(event: Event = {}) {
-    return await internal(new Task(), event);
+    return await internal(new Task(import.meta.url), event);
 }
