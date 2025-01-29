@@ -1,4 +1,3 @@
-import fs from 'fs';
 import ETL, { Event, SchemaType, handler as internal, local, DataFlowType, InvocationType, InputFeatureCollection } from '@tak-ps/etl';
 import { Static, Type, TSchema } from '@sinclair/typebox';
 

@@ -10,6 +10,10 @@
 
 ## Version History
 
+### v2.4.1
+
+- :bug: Fix Lints
+
 ### v2.4.0
 
 - :tada: Add Capabilities API
