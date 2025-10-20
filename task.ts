@@ -1,5 +1,11 @@
-import ETL, { Event, SchemaType, handler as internal, local, DataFlowType, InvocationType, InputFeatureCollection } from '@tak-ps/etl';
+import ETL, { Event, SchemaType, handler as internal, local, DataFlowType, InvocationType } from '@tak-ps/etl';
+import { Feature } from '@tak-ps/node-cot'
 import { Static, Type, TSchema } from '@sinclair/typebox';
+
+const InputSchema = Type.Object({
+    'COTRIP_TOKEN': Type.String({ description: 'API Token for CoTrip' }),
+    'DEBUG': Type.Boolean({ description: 'Print GeoJSON results in logs', default: false })
+});
 
 export default class Task extends ETL {
     static name = 'etl-cotrip-weather';
@@ -12,10 +18,7 @@ export default class Task extends ETL {
     ): Promise<TSchema> {
         if (flow === DataFlowType.Incoming) {
             if (type === SchemaType.Input) {
-                return Type.Object({
-                    'COTRIP_TOKEN': Type.String({ description: 'API Token for CoTrip' }),
-                    'DEBUG': Type.Boolean({ description: 'Print GeoJSON results in logs', default: false })
-                });
+                return InputSchema;
             } else {
                 return Type.Object({
                     publicName: Type.String(),
@@ -37,9 +40,10 @@ export default class Task extends ETL {
     async control() {
         const layer = await this.fetchLayer();
 
+        const env = await this.env(InputSchema);
+
         const api = 'https://data.cotrip.org/';
-        if (!layer.environment.COTRIP_TOKEN) throw new Error('No COTrip API Token Provided');
-        const token = layer.environment.COTRIP_TOKEN;
+        if (!env.COTRIP_TOKEN) throw new Error('No COTrip API Token Provided');
 
         const stations = [];
         let batch = -1;
@@ -47,7 +51,7 @@ export default class Task extends ETL {
         do {
             console.log(`ok - fetching ${++batch} of weather stations`);
             const url = new URL('/api/v1/weatherStations', api);
-            url.searchParams.append('apiKey', String(token));
+            url.searchParams.append('apiKey', String(env.COTRIP_TOKEN));
             if (res) url.searchParams.append('offset', res.headers.get('next-offset'));
 
             res = await fetch(url);
@@ -85,7 +89,7 @@ export default class Task extends ETL {
             }
         }
 
-        const fc: Static<typeof InputFeatureCollection> = {
+        const fc: Static<typeof Feature.InputFeatureCollection> = {
             type: 'FeatureCollection',
             features: features
         };
