@@ -38,8 +38,6 @@ export default class Task extends ETL {
     }
 
     async control() {
-        const layer = await this.fetchLayer();
-
         const env = await this.env(InputSchema);
 
         const api = 'https://data.cotrip.org/';

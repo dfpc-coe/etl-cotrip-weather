@@ -10,6 +10,10 @@
 
 ## Version History
 
+### v3.3.1
+
+- :rocket Remove unused layer val
+
 ### v3.3.0
 
 - :arrow_up Update Core Deps
