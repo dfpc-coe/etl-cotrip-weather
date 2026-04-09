@@ -50,7 +50,10 @@ export default class Task extends ETL {
             console.log(`ok - fetching ${++batch} of weather stations`);
             const url = new URL('/api/v1/weatherStations', api);
             url.searchParams.append('apiKey', String(env.COTRIP_TOKEN));
-            if (res) url.searchParams.append('offset', res.headers.get('next-offset'));
+            if (res) {
+                const nextOffset = res.headers.get('next-offset');
+                if (nextOffset) url.searchParams.append('offset', nextOffset);
+            }
 
             res = await fetch(url);
 
