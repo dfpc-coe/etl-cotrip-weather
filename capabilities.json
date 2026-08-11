@@ -1,0 +1,27 @@
+{
+    "version": "1.0",
+    "name": "COtrip Weather Stations",
+    "description": "Ingests roadside weather station observations from the Colorado COtrip system and posts them to the map.",
+    "compute": {
+        "memory": 512,
+        "timeout": 60
+    },
+    "permissions": [
+        {
+            "resource": "feature:*",
+            "required": true,
+            "description": "COtrip Weather posts roadside weather station observations to the map"
+        }
+    ],
+    "invocations": {
+        "incoming": {
+            "schedule": {
+                "description": "Polls the Colorado COtrip system for updated weather station data on a schedule.",
+                "default": {
+                    "enabled": true,
+                    "schedule": "rate(5 minutes)"
+                }
+            }
+        }
+    }
+}
